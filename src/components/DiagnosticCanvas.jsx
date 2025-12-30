@@ -17,17 +17,18 @@ const nodeTypes = {
   custom: CustomNode,
 }
 
-function DiagnosticCanvas({ initialProblem, onBack }) {
+function DiagnosticCanvas({ initialProblem, onBack, initialNodes: providedNodes, initialEdges: providedEdges }) {
   const addChildNodeRef = useRef(null)
   const updateNodeLabelRef = useRef(null)
   const selectedNodeIdRef = useRef(null)
   const [selectedNodeId, setSelectedNodeId] = useState('0')
 
-  const initialNodes = useMemo(() => [
+  // 如果提供了初始节点和边（AI分析结果），使用它们；否则创建默认节点
+  const defaultNodes = useMemo(() => [
     {
       id: '0',
       type: 'custom',
-      position: { x: 400, y: 80 },
+      position: { x: 500, y: 80 },
       data: { 
         label: initialProblem,
         isRoot: true,
@@ -35,8 +36,24 @@ function DiagnosticCanvas({ initialProblem, onBack }) {
     },
   ], [initialProblem])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const nodesToUse = providedNodes || defaultNodes
+  const edgesToUse = providedEdges || []
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(nodesToUse)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(edgesToUse)
+
+  // 当提供的节点或边改变时，更新状态
+  useEffect(() => {
+    if (providedNodes) {
+      setNodes(providedNodes)
+    }
+  }, [providedNodes, setNodes])
+
+  useEffect(() => {
+    if (providedEdges) {
+      setEdges(providedEdges)
+    }
+  }, [providedEdges, setEdges])
   const nodesRef = useRef(nodes)
   const edgesRef = useRef(edges)
 
